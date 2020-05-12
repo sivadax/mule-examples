@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule
+  xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
+  xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+  xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+  xmlns:http="http://www.mulesoft.org/schema/mule/http"
+  xmlns="http://www.mulesoft.org/schema/mule/core"
+xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd">
+	<http:listener-config name="httpListnerConfig" doc:name="HTTP Listener config" doc:id="f141b5a0-5702-4a98-b9b1-a27a01820e1a" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="hello-world-main" doc:id="7f8f09a8-6079-4476-95c3-d3806b6f9a56" doc:description="This is a hello world main flow.. !!!!!!!!">
+		<http:listener doc:name="GET /hello" doc:id="fdf86bda-5316-4825-beee-d7ab3f79cc69" path="/hello" config-ref="httpListnerConfig" allowedMethods="GET" doc:description="This is an HTTP listner that listens to end point let say /hello, allowed methods only GET"/>
+		<set-payload value="Hello World" doc:name="to Hello World" doc:id="5ed8cd0b-260b-4f87-bf67-7ee29c934305" />
+    <logger level="INFO" doc:name="logging Payload" doc:id="0917b1c0-67da-4cef-bfcf-61b07f462679" category="hello-world-sapi-hello-world-main" message="#[payload]"/>
+	</flow>
+</mule>
