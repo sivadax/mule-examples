@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="05da2d8d-272d-422f-9f52-9780d621a493" >
+    <http:listener-connection host="0.0.0.0" port="8081" />
+  </http:listener-config>
+  <http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="61ec9b7d-a2ad-45f5-bc71-22d6c8860c72" >
+    <http:request-connection host="localhost" port="8081" />
+  </http:request-config>
+  <flow name="main-flow" doc:id="5f65f7fb-8a43-40e1-b5bb-d98486dd8522" >
+		<scheduler doc:name="Scheduler" doc:id="ebf03f78-8cd9-4570-9c06-689e5d9cfe9f" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="100"/>
+			</scheduling-strategy>
+		</scheduler>
+		<set-payload value='#[%dw 2.0
+output applicaiton/java
+
+var objects = [
+  {
+    "msg": "Hello"
+  },
+  {
+    "msg2": "hello"
+  },
+  {
+    "toUpper": "hELLO"
+  },
+  {
+    "combined": "HELLO WORLD"
+  },
+  {
+    "combined2": "hello world today"
+  }
+]
+---
+objects]' doc:name="Set Payload" doc:id="0284df58-cf98-46c0-a6ab-b26780e8308c" />
+		<foreach doc:name="For Each" doc:id="3d88eac4-1a27-41e6-a622-8fef1ae235d4" >
+			<http:request method="GET" doc:name="GET /ping" doc:id="e37a7145-5b3a-4c78-b4a8-3577c5faac62" config-ref="HTTP_Request_configuration" path="/ping" />
+      <logger level="INFO" doc:name="Logger" doc:id="255a6325-a8ac-418f-ac05-2a79511e5c49" message="#[payload]"/>
+			<ee:transform doc:name="Transform Message" doc:id="b783ef68-48c9-4af7-8a92-0aa3fdc3ae26">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+import * from dw::Runtime
+output application/json
+---
+{ payload : "after wait" } wait 10000]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</foreach>
+	</flow>
+  <flow name="ping-pong-flow" doc:id="8a04adca-a7ee-4dae-b86f-bb9c8fd57f4a" >
+    <http:listener doc:name="GET /ping" doc:id="a99106b2-2d22-47da-8a7c-d1b404260e03" config-ref="HTTP_Listener_config" path="/ping"/>
+    <set-payload value="pong" doc:name="Set Payload" doc:id="e481a2a9-d7ed-49fe-abc8-a354081a3e38" />
+    <logger level="INFO" doc:name="Logger" doc:id="31666654-eb2a-4b6e-af7b-8af6687f5118" message="#[payload]"/>
+  </flow>
+</mule>
