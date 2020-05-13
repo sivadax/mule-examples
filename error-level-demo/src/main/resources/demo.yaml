@@ -1,0 +1,6 @@
+cloudhub:
+  username: "xxxxxxxxxx"
+  password: "xxxxxxxxx"
+  env: "Sandbox"
+  url: "https://anypoint.mulesoft.com"
+  appname: "replaceThisWithYourAppName"

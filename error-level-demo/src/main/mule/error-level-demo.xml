@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:java="http://www.mulesoft.org/schema/mule/java"
+	xmlns:custom-metrics="http://www.mulesoft.org/schema/mule/custom-metrics"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:cloudhub="http://www.mulesoft.org/schema/mule/cloudhub" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/cloudhub http://www.mulesoft.org/schema/mule/cloudhub/current/mule-cloudhub.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/custom-metrics http://www.mulesoft.org/schema/mule/custom-metrics/current/mule-custom-metrics.xsd
+http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="253995bd-88fb-417c-9c58-4c3022ecec91" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<cloudhub:config name="CloudHub_Config" doc:name="CloudHub Config" doc:id="6a6876ad-dfea-4284-96e6-03ead32e311f" >
+		<cloudhub:connection username="${cloudhub.username}" password="${cloudhub.password}" environment="6d2fdc58-ddb6-4c10-bb0b-79e4816af057">
+			<reconnection />
+		</cloudhub:connection>
+	</cloudhub:config>
+	<configuration-properties doc:name="Configuration properties" doc:id="44953296-3d6b-4d96-ad9d-8627ef268c44" file="demo.yaml" />
+	<flow name="error-level-demoFlow" doc:id="f73a6593-38cf-4db8-a060-19f69e178928" tracking:enable-default-events="true">
+		<http:listener doc:name='get /test?key=1' doc:id="b55f96f8-4809-4790-baf7-e30395a375dd" path="/test" config-ref="HTTP_Listener_config"/>
+		<set-variable value='#[attributes.queryParams.key default 0]' doc:name="Set Variable count" doc:id="9f31f2e9-a377-4ad7-bca7-388ca8f69162" variableName="count"/>
+		<set-payload value='#[{
+	Hello : "world!"
+}]' doc:name="Set Payload" doc:id="5b4fcad1-2fe4-4e5f-a25d-284fbe265618" />
+    <logger level="INFO" doc:name="Empty Logger" doc:id="65a47eae-2599-4d7e-8e8e-cf4b9b74db11" category="Empty Logger"/>
+    <logger level="DEBUG" doc:name="debug-logger" doc:id="ee540dbf-e127-41e9-8995-da1cb05ff0c1" message="Logger at Debug Level" category="debug-logger"/>
+		<logger level="ERROR" doc:name="error-logger" doc:id="910bc4f1-806c-4939-ab52-87ac7a482a04" message="Logger at Error Level" category="error-logger"/>
+		<logger level="INFO" doc:name="info-logger" doc:id="9beb1500-8224-448a-a95b-3f42602cc8de" message="info-logger" category="info-logger"/>
+		<logger level="INFO" doc:name="Trace-logger" doc:id="c43638e4-eb00-4bde-a51e-72f90759e72e" message="Logger at trace level" category="Trace-logger" />
+		<ee:transform doc:name="dataweave logging example" doc:id="57b25b86-f304-4208-abd2-5d2e09434ee2" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{ 
+	somelogs : log("Hello world log from dataweave")
+	
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<choice doc:name="choice has options to enable default events tracking" doc:id="de241b8d-0611-4174-84ac-f05d1d2a66c3" tracking:enable-default-events="true">
+			<when expression="#[vars.count == '1']">
+				<logger level="INFO" doc:name="only this logger will be executed" doc:id="cac6d045-521f-43c5-a6f4-b503f842f5a9" message="only this logger will be executed" category="logger-inside-choice-router"/>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="this will never execute" doc:id="210adb7f-85f5-41e7-af4c-a40364b0e3e9" message="this will never execute" />
+				<raise-error doc:name="Raise error" doc:id="092d28b0-1f91-44cd-b685-0c353a971362" type="MY:CUSTOMERROR" />
+			</otherwise>
+		</choice>
+		<tracking:custom-event doc:name="Custom Business Event" doc:id="1e6151e5-3023-4b7a-8f2e-f8538860fc3e" event-name="OrderTotal">
+			<tracking:meta-data key="totalOrdersPerBatch" value="100" />
+			<tracking:meta-data key="totalRevenuePerBatch" value="5000" />
+			<tracking:meta-data key="totalWebBasedOrders" value="50" />
+		</tracking:custom-event>
+		<cloudhub:create-notification doc:name="Create Notification" doc:id="d7f3fbad-991b-469e-adcc-ea0ea15ea31b" config-ref="CloudHub_Config" priority="ERROR" domain="${cloudhub.appname}">
+			<cloudhub:message ><![CDATA[Hello world notification from Cloudhub Connector. Testing.. Notifications..]]></cloudhub:message>
+		</cloudhub:create-notification>
+		<logger level="WARN" doc:name="warn-logger" doc:id="2075cfbf-092e-42a4-a9c1-d25742a51487" message="Logger at warn Level" category="warn-logger"/>
+		<custom-metrics:send doc:name="Send Custom Metric" doc:id="40f1fb6b-15f8-47f5-b2d7-faf065ba4fdf" metricName="myMetrics">
+			<custom-metrics:dimensions >
+				<custom-metrics:dimension dimensionName="hello" value="#[99]" />
+			</custom-metrics:dimensions>
+			<custom-metrics:facts>
+				<custom-metrics:fact factName="orders" value="#[55.55]" />
+			</custom-metrics:facts>
+		</custom-metrics:send>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="1dcbd256-fa84-41f9-8a47-9a1764668825" >
+				<logger level="INFO" doc:name="Logger" doc:id="642fc1f7-aca8-43e8-81d0-4018c7368aa7" message="Logger inside error Handling Scope" category="error-handler-logger-info"/>
+				<logger level="ERROR" doc:name="Logger" doc:id="1f2efe79-be24-4658-8b99-d2319bf91355" message="Logger inside error Handling Scope" category="error-handler-logger-error" />
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+</mule>
