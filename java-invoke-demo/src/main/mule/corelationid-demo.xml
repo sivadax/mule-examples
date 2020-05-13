@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting"
+	xmlns:java="http://www.mulesoft.org/schema/mule/java"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="d1fbb4f5-4b64-4ede-9641-d98a6716a604" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="corelationid-demoFlow" doc:id="82cc04fa-d086-4636-b232-23997a8e42fa" >
+		<http:listener doc:name="get /test" doc:id="8242c6ae-86dc-418c-9c8b-c97c0ec8f9b4" config-ref="HTTP_Listener_config" path="/test"/>
+		<set-variable value="#[attributes.queryParams.key default 'NONE']" doc:name="key" doc:id="13370738-9dfd-4554-a931-42158fd8fd09" variableName="key"/>
+		<java:new doc:name="New" doc:id="3e5f5951-63a0-42a0-8d84-388003437d0f" class="com.njclabs.training.Test" constructor="Test()"/>
+		<java:invoke method="getX()" doc:name="Invoke" doc:id="cba68ed8-a32e-492a-b792-732699a8c680" instance="#[payload]" class="com.njclabs.training.Test"/>
+		<set-variable value="#[attributes.queryParams.number default 1000]" doc:name="number" doc:id="3076018b-7afe-4584-a0f0-9ce66f5256b2" variableName="number"/>
+		<ee:transform doc:name="Transform Message" doc:id="4b66260f-4258-4e09-b4ee-d56ce00ee113" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="ba892e06-496e-4878-9ecb-73f4321df293" message='#[" " ++ vars.number as String ++ " " ++  vars.key]'/>
+	</flow>
+</mule>
