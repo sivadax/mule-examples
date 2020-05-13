@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xml-module="http://www.mulesoft.org/schema/mule/xml-module" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/xml-module http://www.mulesoft.org/schema/mule/xml-module/current/mule-xml-module.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="0c71ca27-a9bb-4c5d-bd20-ac0de0735084" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<xml-module:config name="XML_Config" doc:name="XML Config" doc:id="a3b82b91-7fe1-480a-bdd5-5a717faebd2d" />
+	<flow name="xslt-transform-demoFlow" doc:id="123fe21f-39cf-4d21-9c1c-e37a9ab18842" >
+		<http:listener doc:name="post /test" doc:id="d3435865-5ebb-4c0d-9e20-65c55419511c" path="/test" config-ref="HTTP_Listener_config" outputMimeType="application/xml" allowedMethods="POST"/>
+		<xml-module:xslt-transform doc:name="Xslt transform" doc:id="341aa137-e96f-4321-89dd-5e95c7e8e4d2" config-ref="XML_Config" outputMimeType="application/xml">
+			<xml-module:xslt >&lt;xsl:stylesheet xmlns:xsl=&quot;http://www.w3.org/1999/XSL/Transform&quot; version=&quot;2.0&quot;&gt;
+        &lt;xsl:template match=&quot;/&quot;&gt;
+            &lt;table&gt;
+            &lt;tr&gt;
+                &lt;th&gt;Country&lt;/th&gt;
+                &lt;th&gt;City List&lt;/th&gt;
+                &lt;th&gt;Population&lt;/th&gt;
+            &lt;/tr&gt;
+            &lt;xsl:for-each-group select=&quot;cities/city&quot; group-by=&quot;@country&quot;&gt;
+                &lt;tr&gt;
+                    &lt;td&gt;
+                        &lt;xsl:value-of select=&quot;@country&quot;/&gt;
+                    &lt;/td&gt;
+                    &lt;td&gt;
+                        &lt;xsl:value-of select=&quot;current-group()/@name&quot; separator=&quot;, &quot;/&gt;
+                    &lt;/td&gt;
+                    &lt;td&gt;
+                        &lt;xsl:value-of select=&quot;sum(current-group()/@pop)&quot;/&gt;
+                    &lt;/td&gt;
+                &lt;/tr&gt;
+            &lt;/xsl:for-each-group&gt;
+            &lt;/table&gt;
+        &lt;/xsl:template&gt;
+&lt;/xsl:stylesheet&gt;</xml-module:xslt>
+		</xml-module:xslt-transform>
+		<logger level="INFO" doc:name="Logger" doc:id="5d6642c1-9fb5-4634-94b3-bbfee2f35277" message="#[payload]"/>
+	</flow>
+</mule>
