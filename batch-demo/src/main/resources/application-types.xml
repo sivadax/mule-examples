@@ -1,0 +1,51 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="csv" format="csv">
+      <types:shape format="weave" example="examples/datasample.csv"><![CDATA[%dw 2.0
+
+type csv = Array<{|  year: String,   industry_code_ANZSIC: String,   industry_name_ANZSIC: String,   rme_size_grp: String,   variable: String,   value: String,   unit: String|}>
+
+]]></types:shape>
+      <types:properties>
+        <types:property name="headerLineNumber" value="0"/>
+        <types:property name="header" value="true"/>
+        <types:property name="isQuotedString" value="false"/>
+        <types:property name="separator" value=","/>
+      </types:properties>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#d237b9f8-3dca-4fee-8eb1-c0f9879f6445">
+    <types:processor-declaration>
+      <types:output-event>
+        <types:message>
+          <types:payload type="csv"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#dea179e0-f8a7-408f-8896-bd3fc2672985">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="csv[]"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="csv"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#0d7c34f6-e0b7-43fc-83d4-f92e3b278be7">
+    <types:processor-declaration>
+      <types:output-event>
+        <types:message>
+          <types:payload type="csv"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#96acfc88-e965-4095-adf7-a7a2c93f858e"/>
+</types:mule>

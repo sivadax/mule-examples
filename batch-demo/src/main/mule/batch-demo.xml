@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:batch="http://www.mulesoft.org/schema/mule/batch"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<file:config name="File_Config" doc:name="File Config" doc:id="a207aeb5-d63d-4f54-b532-1890f2a348d2" >
+		<file:connection workingDir="F:\batch" />
+	</file:config>
+	<flow name="batch-demoFlow" doc:id="6b6b5761-3007-4582-b2d8-38ca4396d271" maxConcurrency="1">
+		<file:listener doc:name="On New or Updated File" doc:id="d237b9f8-3dca-4fee-8eb1-c0f9879f6445" config-ref="File_Config" directory="F:\batch\in" recursive="false" renameTo="processed.csv" applyPostActionWhenFailed="false" autoDelete="true" watermarkMode="CREATED_TIMESTAMP">
+			<scheduling-strategy >
+				<fixed-frequency frequency="10000"/>
+			</scheduling-strategy>
+		</file:listener>
+		<ee:transform doc:name="Transform Message" doc:id="dea179e0-f8a7-408f-8896-bd3fc2672985" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[output application/java
+---
+payload as Iterator]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<batch:job jobName="batch-demoBatch_Job" doc:id="9f99bd93-2c93-4e07-aa06-e097e393f979">
+			<batch:process-records >
+				<batch:step name="Batch_Step" doc:id="a7fa3943-24c3-421a-9f1d-b5df26c864ff" >
+					<logger level="INFO" doc:name="Logger" doc:id="833e0851-e090-45d2-8b86-da97c089d4fb" message="#[sizeOf(payload)]" category="step1"/>
+					<batch:aggregator doc:name="Batch Aggregator" doc:id="ad78e688-2c67-4f7a-935f-898091adc5d9" size="100">
+						<file:write doc:name="Write" doc:id="0d7c34f6-e0b7-43fc-83d4-f92e3b278be7" config-ref="File_Config" path="F:\batch\out\step1.csv" mode="APPEND" createParentDirectories="false">
+							<error-mapping sourceType="FILE:ACCESS_DENIED" targetType="VISA:WRITER" />
+							<file:content ><![CDATA[#[%dw 2.0
+output application/csv
+---
+payload]]]></file:content>
+						</file:write>
+					</batch:aggregator>
+					<flow-ref doc:name="Flow Reference" doc:id="66c5ab4c-2fd0-4e8d-9856-0f23e928d2ef" name="delayFlow"/>
+				</batch:step>
+				<batch:step name="Batch_Step1" doc:id="c705c26d-e628-4707-bdb3-1c70c08f776f" >
+					<logger level="INFO" doc:name="Logger" doc:id="4c7614c5-f3c2-4496-ba91-732269a13e2b" message="#[sizeOf(payload)]" category="step2"/>
+					<batch:aggregator doc:name="Batch Aggregator" doc:id="67f4c33d-1fd7-4851-966f-031889731157" size="100">
+						<file:write doc:name="Write" doc:id="65549bcd-cc06-4acf-93e8-44133f666568" mode="APPEND" config-ref="File_Config" path="F:\batch\out\step2.csv" createParentDirectories="false">
+							<file:content ><![CDATA[#[%dw 2.0
+output application/csv
+---
+payload]]]></file:content>
+						</file:write>
+					</batch:aggregator>
+				</batch:step>
+			</batch:process-records>
+		</batch:job>
+	</flow>
+	<flow name="delayFlow" doc:id="828783f5-9919-4ff9-9979-5a0f3bc65010" >
+		<choice doc:name="Choice" doc:id="dfbd7553-bf00-41a5-9053-a165d38be268" >
+			<when expression="#[payload.value == '9999999']">
+				<logger level="INFO" doc:name="Logger" doc:id="da47b23a-4720-43ca-ab68-ac3ead7ebc12" category="delayflow" message="Holding a delay now" />
+				<ee:transform doc:name="Transform Message" doc:id="96acfc88-e965-4095-adf7-a7a2c93f858e" >
+					<ee:message >
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="delay" ><![CDATA[%dw 2.0
+import * from dw::Runtime
+output application/json
+---
+{ "user" : 1 } wait 10000]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</when>
+		</choice>
+	</flow>
+</mule>
