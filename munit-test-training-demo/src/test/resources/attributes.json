@@ -1,0 +1,12 @@
+attributes.json
+
+ 
+
+{
+	"headers": {
+		"sample-header": "header-value"
+	},
+	"queryParams": {
+		"order": "veg"
+	}
+}

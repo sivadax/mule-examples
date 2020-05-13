@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="a842030b-f2d9-4b5d-87fc-c2af6f6be908" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="test-recorder-demoFlow" doc:id="bead31c4-724b-4267-9658-3b1b74100676" >
+		<http:listener doc:name="GET /test" doc:id="aeb4e179-b21a-47f9-9918-ce6c4d05db14" path="/test" config-ref="HTTP_Listener_config"/>
+		<choice doc:name="Choice" doc:id="c7f7b23c-d9a2-44cb-85cb-626532657f67" >
+			<when expression="#[attributes.queryParams.key == '1']">
+				<set-payload value="happy" doc:name="Set Payload" doc:id="82eed0d6-b7f3-46c6-81d9-3719ea565e7a" />
+			</when>
+			<otherwise >
+				<set-payload value="unhappy" doc:name="Set Payload" doc:id="0ce5680c-742d-4694-beb6-fddf69d5d487" />
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="Logger" doc:id="c2d6abf8-4b22-4c4b-8330-d3726eb347e7" message="#[payload]"/>
+	</flow>
+</mule>

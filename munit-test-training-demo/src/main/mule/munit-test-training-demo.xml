@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="56ec2ad8-9517-4051-a20e-33ffbeeefb42" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<vm:config name="VM_Config" doc:name="VM Config" doc:id="ac52f466-cafc-4cbb-bdbb-27f5621ffd9a" >
+		<vm:connection />
+		<vm:queues >
+			<vm:queue queueName="DLQ" />
+		</vm:queues>
+	</vm:config>
+	<flow name="munit-test-training-demoFlow" doc:id="37e16226-9a30-4fe5-a601-0abd99e427d8" >
+		<http:listener doc:name="GET /order" doc:id="37dd3a3a-0904-47e3-a853-5e7e27da6da3" path="/order" config-ref="HTTP_Listener_config"/>
+		<set-variable value="#[attributes.queryParams.order default 'NONE']" doc:name="Set Order Type from Query Param" doc:id="ae6aca05-bf93-4082-b705-a069ab508f3f" variableName="orderType"/>
+		<logger level="INFO" doc:name="Logger" doc:id="225900ba-9213-4233-8ba8-63651d7f5dd1" message="#[attributes.queryParams.order]"/>
+		<choice doc:name="Choice" doc:id="8a4da389-7d7a-48eb-af5d-4b46eae4313e" >
+			<when expression="#[(vars.orderType == 'veg' )]">
+				<flow-ref doc:name="process veg order" doc:id="a482754f-edb1-434f-955f-16210d1d5396" name="veg-process"/>
+			</when>
+			<when expression="(vars.orderType == 'nonveg' ) ">
+				<flow-ref doc:name="process non veg order" doc:id="e1aada3d-f678-4b4f-b401-894511c7e83e" name="nonveg-process"/>
+			</when>
+			<otherwise >
+				<flow-ref doc:name="order is not understood -&gt; DLQ" doc:id="5b010fb4-daf6-4588-b909-a367e3470a63" name="DLQ"/>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="Logger" doc:id="aecd14a8-aaca-4051-9e78-61c4f16107ce" message="#[payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="f2b3e34c-1507-4892-8002-db1d6b362fca" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="veg-process" doc:id="f0748d60-97dc-485e-b5c8-94512c5db063" >
+		<set-payload value='#[{
+	ordertype : "veg",
+	item : "veg sandwich",
+	qty : "1",
+	price : "10.00"
+}]' doc:name="generate a veg payload" doc:id="4be3aa65-1ac5-43ec-8d58-46c607502f56" />
+	</flow>
+	<flow name="nonveg-process" doc:id="221c63e8-0f1b-44ea-bd6b-eba7d4b86226" >
+		<set-payload value='#[{
+	ordertype : "nonveg",
+	item : "non veg burger",
+	qty : "1",
+	price : "10.00"
+}]' doc:name="generate a non veg payload" doc:id="d042de46-e921-4739-834a-2839e973805a" />
+	</flow>
+	<flow name="DLQ" doc:id="12ef9ac4-2a54-4161-855f-1fb7a415cd1d" >
+		<vm:publish doc:id="3b272e0e-84fa-443a-a84f-36ee662fc11f" config-ref="VM_Config" queueName="DLQ" doc:name="log error order into error queue ">
+			<vm:content><![CDATA[#[vars.orderType]]]></vm:content>
+		</vm:publish>
+		<set-payload value='#[{
+	ordertype : "error",
+	item : "error",
+	qty : "error",
+	price : "error"
+}]' doc:name="generate an error response" doc:id="9e19a1e0-ab1f-4901-a927-f567fd25ee08" />
+	</flow>
+</mule>

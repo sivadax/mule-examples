@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="munit-test-training-demo-test-suite.xml" />
+	<munit:test name="test-veg" doc:id="f6fb17f6-c1f2-4647-b80b-186a119071dd" description="Test" tags="test1,test2">
+		<munit:behavior>
+			<munit-tools:spy doc:name="set a Spy on OrderType" doc:id="5c824d6e-3af8-4945-b27e-3943c2c25c96" processor="set-variable">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="orderType" attributeName="variableName" />
+				</munit-tools:with-attributes>
+				<munit-tools:before-call >
+					<logger level="INFO" doc:name="Logger" doc:id="3a768083-dea2-4e8f-a1cb-19bed2e92b48" message="#[vars.orderType]"/>
+				</munit-tools:before-call>
+				<munit-tools:after-call >
+					<logger level="INFO" doc:name="Logger" doc:id="9d17f86e-6957-476b-ab01-76179e71dda2" message="#[vars.orderType]"/>
+				</munit-tools:after-call>
+			</munit-tools:spy>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="7d6183fc-347a-4616-8865-295d4157a55d" cloneOriginalEvent="true">
+				<munit:attributes value="#[ {	queryParams : { 'order' : 'veg' }} ]" />
+			</munit:set-event>
+			<flow-ref doc:name="Flow-ref to munit-test-training-demoFlow" doc:id="fe0d9fbc-f1a4-4c12-97a2-cd1af9735722" name="munit-test-training-demoFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="4d8d058e-4c53-494a-922c-d57181dcdbcd" actual="#[payload.ordertype]" expected="veg" message="veg path okay"/>
+		</munit:validation>
+	</munit:test>
+	
+		<munit:test name="test-nonveg" doc:id="a5fa2874-4b67-4079-af0b-4611578743d5" description="Test" tags="test1,test2" >
+			<munit:behavior >
+				<munit-tools:spy doc:name="Set a Spy on OrderType" doc:id="94d2643b-da22-4615-8829-f5dcae18833a" processor="set-variable" >
+					<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="orderType" attributeName="variableName" />
+					<munit-tools:with-attribute whereValue="orderType" attributeName="variableName" />
+				</munit-tools:with-attributes>
+				<munit-tools:before-call >
+						<logger level="INFO" doc:name="Logger" doc:id="6f58c6b7-7287-4365-88b5-b569ca761da2" message="#[vars.orderType]" />
+					</munit-tools:before-call>
+					<munit-tools:after-call >
+						<logger level="INFO" doc:name="Logger" doc:id="1255f391-b66e-43b5-bd12-d156a2bff441" message="#[vars.orderType]" />
+					</munit-tools:after-call>
+				</munit-tools:spy>
+			</munit:behavior>
+			<munit:execution >
+				<munit:set-event doc:name="Set Event" doc:id="aa548ce5-e696-45ac-9fb4-246145930f50" cloneOriginalEvent="true" >
+					<munit:attributes value="#[ {	queryParams : { 'order' : 'nonveg' }} ]" />
+				</munit:set-event>
+				<flow-ref doc:name="Flow-ref to munit-test-training-demoFlow" doc:id="f0d7a5be-9de4-4595-886e-d2cc71353187" name="munit-test-training-demoFlow" />
+			</munit:execution>
+			<munit:validation >
+				<munit-tools:assert-equals doc:name="Assert equals" doc:id="989e6a51-f247-4fd5-8b97-58007887a6ed" actual="#[payload.ordertype]" expected="nonveg" message="non veg path okay" />
+			</munit:validation>
+		</munit:test>
+	
+		<munit:test name="test-invalid" doc:id="aebde2bb-2140-42b3-914f-83579ceb7890" description="Test" tags="test1,test2" >
+			<munit:behavior >
+				<munit-tools:spy doc:name="Set a Spy on OrderType" doc:id="5c40b2a2-5f25-42d3-90ed-1062bd30b914" processor="set-variable" >
+					<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="orderType" attributeName="variableName" />
+					<munit-tools:with-attribute whereValue="orderType" attributeName="variableName" />
+				</munit-tools:with-attributes>
+				<munit-tools:before-call >
+						<logger level="INFO" doc:name="Logger" doc:id="ffa691e2-ca8c-4737-a3c7-4534ff624430" message="#[vars.orderType]" />
+					</munit-tools:before-call>
+					<munit-tools:after-call >
+						<logger level="INFO" doc:name="Logger" doc:id="e2a52f91-5236-4ff4-83ed-7ec1e8f01bfd" message="#[vars.orderType]" />
+					</munit-tools:after-call>
+				</munit-tools:spy>
+			</munit:behavior>
+			<munit:execution >
+				<munit:set-event doc:name="Set Event" doc:id="fdab8231-3173-4c94-87cc-a130e0419b35" cloneOriginalEvent="true" >
+				<munit:attributes value="#[ {	queryParams : { 'order' : 'invalid' }} ]" />
+				</munit:set-event>
+				<flow-ref doc:name="Flow-ref to munit-test-training-demoFlow" doc:id="e3c5b1be-8d8c-4fb1-b472-7506eb94ab9f" name="munit-test-training-demoFlow" />
+			</munit:execution>
+			<munit:validation >
+				<munit-tools:assert-equals doc:name="Assert eauls" doc:id="7614a2e9-5f24-43f1-b467-75adb9172185" actual="#[payload.ordertype]" expected="error" message="invalid order path okay" />
+			</munit:validation>
+		</munit:test>
+
+
+
+
+</mule>
