@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="bfdbc6ac-e89f-434d-83da-f41fe20b4df6" >
+		<http:listener-connection host="0.0.0.0" port="${secure::http.port}" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="cac41bca-64b1-495c-8c26-2d7258a459bf" >
+		<db:my-sql-connection host="${secure::database.url}" port="${secure::database.port}" user="${secure::database.username}" password="${secure::database.password}" database="${secure::database.database}" />
+	</db:config>
+	<configuration-properties doc:name="Configuration properties" doc:id="31801967-feb5-4bab-89fa-5153dac0f9a4" file="config\${env}-config.yaml" />
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="2ac80d6e-2dfd-4b56-bbb2-9ae6018bd460" file="config\${env}-config.yaml" key="${key}" >
+		<secure-properties:encrypt algorithm="Blowfish" />
+	</secure-properties:config>
+	<global-property doc:name="Global Property" doc:id="1386ade0-38b1-4bba-a83b-59558be96227" name="env" value="prod" />
+	<flow name="demo-structuring-appsFlow" doc:id="0149d793-3aff-40f1-b759-1f60a1a3d4a8" >
+		<http:listener doc:name="GET /accounts" doc:id="f4257d4f-045f-4e96-9ab7-6c53d9d2b81a" path="/accounts" config-ref="HTTP_Listener_config"/>
+		<db:select doc:name="Select Accounts from Training" doc:id="a35dca7b-b6cd-449d-9e08-8376e1465f1d" config-ref="Database_Config">
+			<db:sql >select * from accounts LIMIT 10;</db:sql>
+		</db:select>
+		<logger level="INFO" doc:name="Logger" doc:id="afe919f9-7416-4284-9189-0106f3d5fef4" />
+		<ee:transform doc:name="Transform Message" doc:id="c5d9ddc2-084a-4939-8897-b23fe959f81a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	accountID: payload01.accountID,
+	country: payload01.country default "",
+	street: payload01.street default "",
+	state: payload01.state default "",
+	name: payload01.name,
+	city: payload01.city default "",
+	postal: payload01.postal default ""
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

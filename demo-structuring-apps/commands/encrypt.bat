@@ -1,0 +1,1 @@
+java -jar secure-properties-tool.jar file encrypt Blowfish CBC mysecretkey prod-config-in.yaml prod-config.yaml
