@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="87943329-528e-4ab1-accd-5e058ac58f5a" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<jms:config name="JMS_Config" doc:name="JMS Config" doc:id="13cf9c23-dcf3-40fa-b564-dbd37db1efa4" >
+		<jms:active-mq-connection username="admin" password="admin">
+			<jms:factory-configuration brokerUrl="tcp://localhost:61616" initialRedeliveryDelay="100" redeliveryDelay="100" maxRedelivery="5"/>
+		</jms:active-mq-connection>
+	</jms:config>
+	<sub-flow name="ack" doc:id="1c13d3ab-24ac-4f8f-b6ff-f508ec820794" >
+		<jms:ack doc:name="Ack" doc:id="ab9022c4-5c45-4947-a858-5cf40f38cb5f" ackId="#[attributes.ackId]" />
+	</sub-flow>
+	<sub-flow name="recover" doc:id="6b139444-3947-4db6-96f9-32d18bc548ef" >
+		<raise-error doc:name="Raise error" doc:id="a7970be8-49b5-482b-b620-780c34855ace" type="NJCLABS:ERROR"/>
+	</sub-flow>
+	<flow name="jms-publish-to-queue" doc:id="c291bcb9-5225-4e05-8fb1-6ddf1d58f66e" initialState="started">
+		<scheduler doc:name="Scheduler" doc:id="5e7f82bb-d6cc-4202-b93c-c4fdc2039b86" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="5" timeUnit="MINUTES"/>
+			</scheduling-strategy>
+		</scheduler>
+		<os:retrieve doc:name="Retrieve" doc:id="aa539462-c397-4cd6-b3f9-8248d953f537" key="id" target="id">
+			<os:default-value ><![CDATA[0]]></os:default-value>
+		</os:retrieve>
+		<set-payload value="#[%dw 2.0
+output application/json
+---
+{
+	id : vars.id 
+}]" doc:name="Set Payload" doc:id="858b0f4c-6b87-46c2-b343-1e011a909010" />
+		<jms:publish doc:id="b3ec3a6b-bb5b-4279-bd92-4c15a92fc51c" doc:name="Publish to JMS" config-ref="JMS_Config" destination="training" sendCorrelationId="ALWAYS" />
+		<os:store doc:id="d898b445-579b-4d21-b61c-853e7f5343e6" key="id">
+			<os:value><![CDATA[#[vars.id + 1]]]></os:value>
+		</os:store>
+	</flow>
+	<flow name="jms-consume-from-queue" doc:id="00c93c2c-72a1-4e0e-a801-b3237ae69ce2" initialState="started">
+		<jms:listener doc:name="Listener" doc:id="e18243ad-1b9c-4ef7-9ccb-c4982f678388" config-ref="JMS_Config" destination="training" ackMode="MANUAL" numberOfConsumers="1">
+			<redelivery-policy />
+			<jms:consumer-type >
+				<jms:queue-consumer />
+			</jms:consumer-type>
+			<jms:response sendCorrelationId="ALWAYS" />
+		</jms:listener>
+		<logger level="INFO" doc:name="Pre Error Log" doc:id="1fe5c502-9b24-434b-994b-7ed54e478d83" message='#["Recived Message" : payload]' category="Pre Error Log"/>
+		<flow-ref doc:name="Flow Reference" doc:id="4a7c0d03-c63d-4b60-a26e-7820bc37cc5e" name="recover"/>
+		<flow-ref doc:name="Flow Reference" doc:id="c56073c1-2c2c-4064-9f03-6587a3f62853" name="ack"/>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="3432a59d-6a9c-4804-971e-cdf01ec5432c" type="NJCLABS:ERROR">
+				<logger level="INFO" doc:name="Logger" doc:id="d5dd661e-33d8-4fee-b6fc-a36f33c861ff" />
+				<jms:recover-session doc:name="Recover session" doc:id="712e98ed-1a43-4d92-bfd2-6b2aecbdc950" ackId="#[attributes.ackId]" />
+				<logger level="INFO" doc:name="Logger" doc:id="b9998d86-972a-4f75-a9a8-02a352adb611" />
+			</on-error-continue>
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="ae788edf-cfe9-4510-a998-8c826eb021e5">
+				<logger level="INFO" doc:name="Logger" doc:id="711507fe-4ba5-4803-8067-59ec7f2d0833" message="&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; TRIED FIVE TIMES AND FAILED &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;" />
+			</on-error-continue>
+		</error-handler>
+	</flow>
+</mule>
