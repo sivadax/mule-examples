@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd">
+	<http:listener-config name="two_way_https_server_config" doc:name="HTTP Listener config" doc:id="b7008205-253f-4dec-b72a-2338749d1c49" >
+		<http:listener-connection protocol="HTTPS" host="0.0.0.0" port="8083" >
+			<tls:context >
+				<tls:trust-store path="clientstore.jks" password="password" type="jks" />
+				<tls:key-store type="jks" path="serverstore.jks" alias="selfsigned" keyPassword="password" password="password" />
+			</tls:context>
+		</http:listener-connection>
+	</http:listener-config>
+	<http:request-config name="tls_two_way_client_context" doc:name="HTTP Request configuration" doc:id="20462c78-21c2-464b-bd93-63ef6e5e6605" >
+		<http:request-connection protocol="HTTPS" host="127.0.0.1" port="8083" >
+			<tls:context >
+				<tls:trust-store path="serverstore.jks" password="password" type="jks" />
+				<tls:key-store type="jks" path="clientstore.jks" alias="selfsigned" keyPassword="password" password="password" />
+			</tls:context>
+		</http:request-connection>
+	</http:request-config>
+	<flow name="ssl-two-way-demoFlow1" doc:id="f3daa40f-e0cb-48f8-bae3-0362bd58eacc" >
+		<http:listener doc:name="get /server2" doc:id="6c560d38-cf9e-4f95-844b-22a2f4caef66" path="/server2" config-ref="two_way_https_server_config"/>
+		<set-payload value="Hello two way SSL" doc:name="Set Payload" doc:id="80a76c99-d75c-42b0-89e4-4e5b97d4e738" />
+	</flow>
+	<flow name="ssl-two-way-demoFlow" doc:id="38bcd58b-899a-4695-b8a2-d9839041a78d" >
+		<http:listener doc:name="get /test2" doc:id="812fa0f0-7745-4ac8-baeb-fe16753a4e98" config-ref="HTTP_Listener_config" path="/test2"/>
+		<http:request method="GET" doc:name="Request" doc:id="1ddedf9f-09c1-4f72-8cb4-1f257ed41ccb" config-ref="tls_two_way_client_context" path="/server2"/>
+	</flow>
+</mule>
