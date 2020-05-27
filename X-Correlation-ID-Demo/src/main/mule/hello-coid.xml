@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<http:listener-config name="HTTP_Listener_config"
+		doc:name="HTTP Listener config"
+		doc:id="4355461e-9a5f-4610-a013-7caffb3534f5">
+		<http:listener-connection host="0.0.0.0"
+			port="8081" />
+	</http:listener-config>
+	<http:request-config
+		name="HTTP_Request_configuration"
+		doc:name="HTTP Request configuration"
+		doc:id="4baa6c96-269a-4ebe-a281-6c1f23015e33">
+		<http:request-connection host="localhost" port="8081" />
+	</http:request-config>
+	<flow name="hello-coid-flow" doc:id="652ded4f-c900-4afa-815d-e66b04180aad" doc:description="The default behavior of connectors are always to send the corelation id.">
+		<http:listener doc:name="GET /hello" doc:id="18dfc677-ce20-447c-a8c8-45f8f43f1979" path="/hello" config-ref="HTTP_Listener_config" allowedMethods="GET"/>
+		<logger level="INFO" doc:name="Logger" doc:id="5aa5116a-eb4c-4017-bef4-e0bbe992f649" category="hello-coid-flow" message="#[sizeOf(payload)]"/>
+		<http:request method="GET" doc:name="Request" doc:id="d5273ccc-0916-46d9-82b4-ce373223464d" config-ref="HTTP_Request_configuration" path="/server"/>
+	</flow>
+		<flow name="mock-server-flow" doc:id="0c544d32-883c-4129-9f2f-0f78514cbbd0" >
+		<http:listener doc:name="GET /server" doc:id="aa11d97d-9714-4154-9302-ced3e03e31f1" path="/server" config-ref="HTTP_Listener_config" allowedMethods="GET"/>
+		<logger level="INFO" doc:name="Logger" doc:id="93ddf384-f06d-4472-a099-9a5be2097c03" category="mock-server-flow" message="#[sizeOf(payload)]"/>
+	</flow>
+</mule>
