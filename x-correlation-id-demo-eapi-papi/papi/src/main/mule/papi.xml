@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="55f090b8-5283-49d4-bf3a-5fcc6bd8a72c" >
+		<http:listener-connection host="0.0.0.0" port="8082" />
+	</http:listener-config>
+	<flow name="Copy_of_eapiFlow" doc:id="b5e76624-f470-4dc5-8707-7dc66fa41a4c" >
+		<http:listener doc:name="get /world" doc:id="d8c44d08-2edd-4f2f-bf56-4e34bf4c92e0" config-ref="HTTP_Listener_config" path="world" />
+		<logger level="INFO" doc:name="Logger" doc:id="f0e9c968-36c0-4aa1-b4a4-bfb37ae6df49" message="#[{ papi : correlationId }]"/>
+	</flow>
+</mule>

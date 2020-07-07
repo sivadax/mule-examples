@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="88c869f7-1b6c-4957-abd0-980c94079a40" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="62c2f031-7b2f-4ec2-b72d-507c386c939c" >
+		<http:request-connection host="localhost" port="8082" />
+	</http:request-config>
+	<flow name="eapiFlow" doc:id="7c5fcbb2-8868-4194-b556-300beaede050" >
+		<http:listener doc:name="Listener" doc:id="5a623d17-ce5e-4491-bea3-352a52349782" config-ref="HTTP_Listener_config" path="/hello"/>
+		<http:request method="GET" doc:name="get /world" doc:id="a0c6af9a-cd51-4225-b170-a277589ffef5" config-ref="HTTP_Request_configuration" path="/world"/>
+		<logger level="INFO" doc:name="Logger" doc:id="6c963949-df26-41dd-a3ac-8977e56afe68" message="#[{ eapi : correlationId }]"/>
+	</flow>
+</mule>

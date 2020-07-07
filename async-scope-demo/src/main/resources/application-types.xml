@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="csv" format="csv">
+      <types:shape format="weave" example="examples/sample.csv"><![CDATA[%dw 2.0
+
+type csv = Array<{|  Region: String,   Country: String,   "Item Type": String,   "Sales Channel": String,   "Order Priority": String,   "Order Date": String,   "Order ID": String,   "Ship Date": String,   "Units Sold": String,   "Unit Price": String,   "Unit Cost": String,   "Total Revenue": String,   "Total Cost": String,   "Total Profit": String|}> {"isQuotedString": "false",
+"header": "true",
+"headerLineNumber": "0",
+"separator": ","}
+
+]]></types:shape>
+      <types:properties>
+        <types:property name="headerLineNumber" value="0"/>
+        <types:property name="header" value="true"/>
+        <types:property name="isQuotedString" value="false"/>
+        <types:property name="separator" value=","/>
+      </types:properties>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#12fee927-3964-4f6d-930e-1d0c7eba05aa"/>
+  <types:enrichment select="#54a3e65f-01b4-4618-9d3d-12d9d5d5c513">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="csv[]"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#b612a914-8c58-4242-bef0-2b35f4082d08">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="csv"/>
+          <types:attributes type="csv"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="csv"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>

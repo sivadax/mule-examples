@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule
+  xmlns:file="http://www.mulesoft.org/schema/mule/file"
+  xmlns:ftp="http://www.mulesoft.org/schema/mule/ftp"
+  xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+  xmlns:http="http://www.mulesoft.org/schema/mule/http"
+  xmlns="http://www.mulesoft.org/schema/mule/core"
+  xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/ftp http://www.mulesoft.org/schema/mule/ftp/current/mule-ftp.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+  <http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="db7d5b28-c96d-422f-a820-e5dfd0783e50" basePath="/" >
+    <http:listener-connection host="0.0.0.0" port="8081" />
+  </http:listener-config>
+  <file:config name="File_Config" doc:name="File Config" doc:id="6d56e37c-51cd-45c6-8e1d-6bc9af86393e" >
+    <file:connection workingDir="D:\temp\" />
+  </file:config>
+  <flow name="async-scope-demoFlow" doc:id="5b26d631-b85a-4fea-9bc4-e0eef2bf0ebb" >
+    <http:listener doc:name="get /test" doc:id="cc2ffd5c-2c6e-462e-9685-569d0f8bb938" config-ref="HTTP_Listener_config" path="/test"/>
+    <set-payload value="#[100]" doc:name="Set Payload" doc:id="be7a98e0-ee06-4e3e-be6b-4f227b949809" />
+    <async doc:name="Async" doc:id="88c4e896-c073-4e1d-ad42-071be6507fc3" >
+      <flow-ref doc:name="call calculator" doc:id="ecc466f5-a906-4c21-b059-ed3c47edf2f7" name="calculator"/>
+    </async>
+    <ee:transform doc:name="Transform Message" doc:id="12fee927-3964-4f6d-930e-1d0c7eba05aa" >
+      <ee:message >
+      </ee:message>
+      <ee:variables >
+        <ee:set-variable variableName="delay2" ><![CDATA[%dw 2.0
+import * from dw::Runtime
+output application/json
+---
+{ "user" : 1 } wait 3000]]></ee:set-variable>
+      </ee:variables>
+    </ee:transform>
+    <logger level="INFO" doc:name="Logger" doc:id="ef497d62-230c-422a-bea1-d9515801b8b9" message="#[payload]" category="main-flow"/>
+  </flow>
+  <flow name="calculator" doc:id="14794a19-e0a1-4240-b20d-40d2fd889932" >
+    <ee:transform doc:name="Transform Message" doc:id="4a12ea1a-56c0-440d-92eb-5adfd4320af0" >
+      <ee:message >
+        <ee:set-payload ><![CDATA[%dw 2.0
+output application/dw
+---
+payload * 100]]></ee:set-payload>
+      </ee:message>
+      <ee:variables >
+        <ee:set-variable variableName="delay" ><![CDATA[%dw 2.0
+import * from dw::Runtime
+output application/json
+---
+{ "user" : 1 } wait 20]]></ee:set-variable>
+      </ee:variables>
+    </ee:transform>
+    <logger level="INFO" doc:name="Logger" doc:id="6159587d-f94a-47b0-b24e-d6e6a4f9b5eb" message="#[payload]" category="async-calculator"/>
+  </flow>
+  <flow name="async-scope-streaming" doc:id="90d49de1-bdfe-4399-96fb-dd99965050dd" >
+    <http:listener doc:name="get /test2" doc:id="ed1d47d7-e84b-4619-83ec-8456c469a76c" config-ref="HTTP_Listener_config" path="/test2"/>
+    <file:read doc:name="Read test.csv" doc:id="54a3e65f-01b4-4618-9d3d-12d9d5d5c513" config-ref="File_Config" path="test.csv" outputMimeType="application/csv">
+      <repeatable-in-memory-stream />
+    </file:read>
+    <async doc:name="Async" doc:id="15d3a043-f14a-4246-b339-844c23b26c34" >
+      <flow-ref doc:name="call calculator2" doc:id="ba904952-c68b-4cd4-8d98-b096b9c8dc21" name="calculator2"/>
+    </async>
+    <ee:transform doc:name="Transform Message" doc:id="918681f9-d4b3-4b6c-8855-fe408c9ef45d" >
+      <ee:message >
+      </ee:message>
+      <ee:variables >
+        <ee:set-variable variableName="delay2" ><![CDATA[%dw 2.0
+import * from dw::Runtime
+output application/json
+---
+0 //{ "user" : 1 } wait 3000]]></ee:set-variable>
+      </ee:variables>
+    </ee:transform>
+    <file:write doc:name="Write main.csv" doc:id="7569a3f9-8fb7-4ba7-9bde-d448c2a6bd7b" config-ref="File_Config" path="main.csv"/>
+    <logger level="DEBUG" doc:name="Logger" doc:id="b106cb47-ad21-4976-84d5-ab30ec3825fa" message="#[payload]" category="main-flow"/>
+  </flow>
+  <flow name="calculator2" doc:id="2909e604-325b-4885-89c6-349fc3bd2f43" >
+    <ee:transform doc:name="Transform Message" doc:id="b612a914-8c58-4242-bef0-2b35f4082d08" >
+      <ee:message >
+        <ee:set-payload ><![CDATA[%dw 2.0
+output application/csv headerLineNumber = 0 , header = true , separator = ","
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	Region: payload01."Sales Channel",
+	"Sales Channel": payload01.Region
+}]]></ee:set-payload>
+      </ee:message>
+      <ee:variables >
+        <ee:set-variable variableName="delay" ><![CDATA[%dw 2.0
+import * from dw::Runtime
+output application/json
+---
+{ "user" : 1 } wait 3000]]></ee:set-variable>
+      </ee:variables>
+    </ee:transform>
+    <file:write doc:name="Write async.csv" doc:id="483c1ee1-dc34-441e-9440-8d3908669d84" config-ref="File_Config" path="async.csv"/>
+    <logger level="DEBUG" doc:name="Logger" doc:id="5d56d794-b37e-4afa-91dd-7ba7e10a6aa6" message="#[payload]" category="async-calculator"/>
+  </flow>
+</mule>
